@@ -36,7 +36,7 @@ This system is a low cost weight measuring system.
 
 The following figure is a high level over of the whole project:
 
-![](C:\Users\rickl\OneDrive\Documents\GitHub\Beer-Keg-Monitor\Keg_Monitor_System.jpg)
+![](Keg_Monitor_System.jpg)
 
 A few notes on the system design.  I keep my beer kegs in a chest freezer, so I have to control the power so the beer does not freeze.  That is why the relay is included in the design.  
 
