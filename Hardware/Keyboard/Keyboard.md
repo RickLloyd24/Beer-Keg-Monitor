@@ -10,7 +10,7 @@ are available on Amazon for about 20 dollars.
 
 ## Keyboard Schematic
 
-![](C:\Users\rickl\OneDrive\Documents\GitHub\Beer-Keg-Monitor\Hardware\Keyboard\KeyboardSchemtic.jpg)
+![](KeyboardSchemtic.jpg)
 
 <style>
 </style>
