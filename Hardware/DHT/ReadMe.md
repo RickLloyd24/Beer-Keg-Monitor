@@ -33,7 +33,7 @@ The Digital Humidity and Temperature (DHT)  Sensor Module is compact and easy to
 
 ## Schematic
 
-![](DHTSchematic.jpg)
+![](DHTSchematic1.jpg)
 
 The power to the DHT is from a GPIO pin.  This allows the software to reset the sensor 
 
@@ -41,6 +41,4 @@ The power to the DHT is from a GPIO pin.  This allows the software to reset the 
 
 I used the <dhtESP32-rmt.h> library.  This was the only library I could find that would not cause the VGA display to blink everytime the sensor was read.  The library is easy to use and provides good error information from the sensor.  When an error occurs I reset the sensors with the power control pin.  I read the temperature every 10 seconds.
 
-I found that some of these sensors have a bias.  I used 3 temperature sensors to determine the bias.  The software allows the user to enter the bias on each sensor.
-
-
+I found that some of these sensors have a bias.  I use three commercial temperature sensors inside the freezer to determine the bias.  The software allows the user to enter the bias on each sensor.
