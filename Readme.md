@@ -48,9 +48,6 @@ When I first installed the system I had trouble with the DHT sensor.  It would h
 
 The following is the bill of Materials for the entire system:
 
-<style>
-</style>
-
 | **Item** | **Qty** | **Description**               | **Price**     | **Total**     |
 | -------- | ------- | ----------------------------- | ------------- | ------------- |
 | 1        | 5       | Scale Plate                   | $       2.50  | $    12.50    |
@@ -106,19 +103,11 @@ The following are the Arduino libraries I used in this project.  With the infor
 
 #include <ESP_Mail_Client.h>      //Email and Text Message Library
 
-#include "NTP.h"                  //Network Time Protocol library
+#include <AsyncWebServer.h>            //Wi-Fi Server Library
 
-#include "WiFiUdp.h"              //Universal Data Package library (required for NTP)
+#include <AsyncElegantOTA.h>           //Easy to Use OTA updater
 
-#include <ArduinoOTA.h>           //Over-The-Air (OTA) Updates
-
-#include <WiFiClient.h>           //Wi-Fi Client Library
-
-#include <WebServer.h>            //Wi-Fi Server Library
-
-#include <ElegantOTA.h>           //Easy to Use OTA updater
-
-You notice that there is not a HX711 library.  I felt this library was overly complicated and I did not have enough pins to run both data and clock to all scales.  So I wrote my own code with a single clock to drive all the scales. The library is HX711_Single_Clk and it is available on GitHub.
+You notice that there is not a HX711 library.  I felt this library was overly complicated and I did not have enough pins to run both data and clock lines to all scales.  So I wrote my own code with a single clock to drive all the scales. The library is HX711_Single_Clk and it is available on GitHub.
 
 ## Lessons Learned
 
@@ -139,3 +128,23 @@ and runs faster and is more popular. 
 ## Hardware
 
 Check out the hardware section for all the intimate hardware details
+
+## Why a Keezer?
+
+A Keezer is a chest **Freezer** converted to a **Kegerator** which is commonly called a  **Keezer.**
+
+A Keezer has many advanatages: 
+
+- They are more energy efficient.
+
+- They have a lot of space for the cost.
+
+- It is easy to access all the keg connectors.
+
+- It is easy to install and remove the kegs.
+
+Most freezer are not tall enough for the kegs with the fittings, so you need to install a frame (collar) between the freezer top  and the freezer base.  This is not really very hard.  You can find lots of articles on the internet that describe how to do this.
+
+The advantage of the collar is you do not have to drill through the wall of the freezer to install taps, risking hitting a freezer coil.  You can also drill through the collar to bring in and out wires.
+
+You should insulate the kegs from the bottom of the freezer to prevent the beer from freezing and protect the bottom of the freezer.  I used padded vinyl plank flooring which worked great.
