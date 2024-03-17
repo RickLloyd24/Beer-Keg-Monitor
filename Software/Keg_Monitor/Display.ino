@@ -1,63 +1,72 @@
 /* Display Update */
 void DisplayUpdate(void) {
+  int color = 0;
   //Serial.println("Entered DisplayUpdate Function");
   cv.clear();
-  cv.setPenColor(Color::BrightYellow);
+  setPenColor64(lemon);
   cv.drawText(0, Row0,    "       Rick's Beer Keg Monitor");  
-  cv.setPenColor(Color::Cyan);
+  setPenColor64(electricBlue);
   cv.drawTextFmt(0, Row1, "     Average Temperature %4.1f F", Temperature[0]);
-  cv.setPenColor(Color::BrightWhite);
+  setPenColor64(brightWhite);
   cv.drawText(Col0, Row2,   "Tap Glasses       Style         Alc Days"); 
-  cv.setPenColor(Color::White);
+  setPenColor64(jigglypuff);
   int cRow = Row3;
   for (int j = 0; j < numscales; j++) {
-    cv.setPenColor(Color::BrightWhite);cv.drawTextFmt(Col1, cRow, "%d ", j+1);
+    setPenColor64(soulside);cv.drawTextFmt(Col1, cRow, "%d ", j+1);
     if (GlassesLeft[j] > 30) cv.setPenColor(Color::BrightGreen);
     else if (GlassesLeft[j] < 10) cv.setPenColor(Color::BrightRed);
-    else cv.setPenColor(Color::Yellow);
+    else setPenColor64(pilaYellow);
     cv.drawTextFmt(Col4, cRow, " %5.1f ", GlassesLeft[j]);
-    cv.setPenColor(Color::Magenta);
+    setPenColor64(orange);
     drawTextStr(Col12, cRow, BeerNames[j]);
-    cv.setPenColor(Color::Yellow);
+    setPenColor64(turquoise);
     cv.drawTextFmt(Col32, cRow,   "%3.1f  %3d", Alcohol[j], DaysKegged[j] );
     cRow = cRow + Row;
   }
-  cv.setPenColor(Color::BrightBlue);
-  cv.drawText(0, Row8, "Temp #1 "); 
-  if (UsingSensor  == 1){
-    cv.setPenColor(Color::Cyan); 
+  setPenColor64(blueLobster);
+  if (numTS == 1) {
+    cv.drawText(0, Row8, "Temp "); 
+    setPenColor64(alpineWhite);
     cv.drawTextFmt(Col8, Row8, "%4.1f F ", Temperature[1]);
-    cv.setPenColor(Color::BrightBlue);
+  }
+  else if (numTS == 2) {
+    cv.drawText(0, Row8, "Temp #1 "); 
+    color = (UsingSensor  == 1) ? alpineWhite : blueLobster; setPenColor64(color); 
+    cv.drawTextFmt(Col8, Row8, "%4.1f F ", Temperature[1]);
+    color = (UsingSensor  == 2) ? alpineWhite : blueLobster; setPenColor64(color); 
     cv.drawTextFmt(Col16, Row8, "#2 %4.1f F", Temperature[2]);
+    cv.drawTextFmt(Col27, Row8, "Delta %4.1f F", Temperature[1] - Temperature[2]);
   }
   else {
+    cv.drawText(0, Row8, "Temp #1 "); 
+    color = (UsingSensor  == 1) ? alpineWhite : blueLobster; setPenColor64(color); 
     cv.drawTextFmt(Col8, Row8, "%4.1f F ", Temperature[1]);
-    cv.setPenColor(Color::Cyan);
-    cv.drawTextFmt(Col16, Row8, "#2 %4.1f F ", Temperature[2]);
+    color = (UsingSensor  == 2) ? alpineWhite : blueLobster; setPenColor64(color); 
+    cv.drawTextFmt(Col16, Row8, "#2 %4.1f F", Temperature[2]);
+    color = (UsingSensor  == 3) ? alpineWhite : blueLobster; setPenColor64(color); 
+    cv.drawTextFmt(Col27, Row8, "#3 %4.1f F", Temperature[3]);
   }
-  cv.setPenColor(Color::BrightBlue);
-  cv.drawTextFmt(Col27, Row8, "Delta %4.1f F", TemperatureBias[0]);
+  setPenColor64(brown);
   cv.drawTextFmt(0, Row9,   " Max %4.1f Min %4.1f ", HighTemp, LowTemp);    
-  if (FreezerState == 1) {
-    cv.setPenColor(Color::BrightGreen);
-    cv.drawTextFmt(Col20, Row9, "Freezer On  %2d", FreezerOnPercent);  
+  if (digitalRead(FrigControlPin) == 1) {
+    setPenColor64(shyGuyRed);
+    cv.drawTextFmt(Col20, Row9, "Freezer On   %2d", FreezerOnPercent);
   }
   else {
-    cv.setPenColor(Color::Red);
-    cv.drawTextFmt(Col20, Row9, "Freezer Off %2d", 100 - FreezerOnPercent);  
-  }  
-  cv.drawText(Col35, Row9, "%");  
-  if (AlarmCnt == 0) {
-    cv.setPenColor(Color::Green);
-    cv.drawText(0, Row10, "No Alarms");
-  }  
-  else { 
-    cv.setPenColor(Color::BrightRed);
-    cv.drawTextFmt(0, Row10, "Alarms set %d ", AlarmCnt);
+    setPenColor64(shyMoment);
+    cv.drawTextFmt(Col20, Row9, "Freezer Off  %2d", 100 - FreezerOnPercent);
   }
-  cv.setPenColor(Color::Magenta);
+  setPenColor64(blobGreen);
+  cv.drawText   (Col36, Row9, "%");
+  if (AlarmCnt == 0) {
+    setPenColor64(yoshiGreen); cv.drawText(0, Row10, "No Alarms");
+  }  
+  else {
+    setPenColor64(mysticRed); cv.drawTextFmt(0, Row10, "Alarms set %d ", AlarmCnt);
+  }
+  setPenColor64(ultimatePink);
   drawTextStr(Col13, Row10, DateTime); 
-  cv.setPenColor(Color::White);
+  setPenColor64(brandywine);
   int sn = CurrentTap - 1;
   //Serial.print("Current Tap ");Serial.println(CurrentTap);
   cv.drawTextFmt(Col0, Row11, "Tap %1d   Full %8d Weight %4.1f lbs", CurrentTap, FullKeg[sn], FullKegWeight[sn]);  
@@ -80,7 +89,7 @@ void DisplayCommands(void) {
   cv.drawText(0, Row6, "Scales Display Values");
   cv.drawText(0, Row7, "Save to file");
   cv.drawText(0, Row8, "Date mm/dd/yy hh:mm");
-  cv.drawTextFmt(0, Row9, "Temp i Bias ff.f (%4.1f %4.1f delta %4.1f)", TemperatureBias[1], TemperatureBias[2], TemperatureBias[0]);
+  cv.drawTextFmt(0, Row9, "Temp i Bias ff.f (%4.1f, %4.1f, %4.1f)", TempBias[1], TempBias[2], TempBias[3]);
   cv.drawTextFmt(0, Row10, "Goal xx (Current %2d) degrees", Tempgoal);
   // Row 11 Status
   // Row 12 Error
@@ -108,6 +117,7 @@ void DisplayRow14(String s) {
   drawTextStr(0, Row14, s);
 }
 
+/* Display key pressed in bottom rectangle */
 void DisplayKeys(String s) {
   //cv.setPenColor(Color::Black);
   //cv.drawText(3, Row14, "                ");
@@ -217,4 +227,24 @@ void ProcAlarm(int alarmNum, String a) {
       AlarmStr = AlarmStr + a + ";";
     }
   }  
+}
+
+void setBrushColor64(int num) {
+  int R; int G; int B;
+  RGBFunction(num, R, G, B);
+  cv.setBrushColor  (R, G,  B);
+}
+void setPenColor64(int num) {
+  int R; int G; int B;
+  RGBFunction(num, R, G, B);
+  cv.setPenColor  (R, G,  B);
+}
+/* This function returns the RGB values for the 64 colors */
+/* colornum is from 0 to 63 */
+void RGBFunction(int num, int &R, int &G, int &B){
+  if (num > 63) return;
+  R = int(num / 16) * 64;
+  G = int((num % 16) / 4) * 64;
+  B = (num % 4) * 64;
+  //Serial.println("Color Num= " + String(num) + " RGB " + String(red) + ", " + String(green) + ", " + String(blue));
 }

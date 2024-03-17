@@ -29,8 +29,9 @@ boolean ReadConfigFile() {
      for (int j = 0; j < 5; j++) {
        BeerNames[j] = SubString(s);
      }
-     TemperatureBias[1] = SubString(s).toFloat();
-     TemperatureBias[2] = SubString(s).toFloat();
+     TempBias[1] = SubString(s).toFloat();
+     TempBias[2] = SubString(s).toFloat();
+     TempBias[3] = SubString(s).toFloat();
      Tempgoal = SubString(s).toInt();
      ClearTempStatistics();
      int i = SubString(s).toInt();
@@ -70,7 +71,7 @@ void WriteConfigFile (void) {
     s = s + BeerNames[j] + ", "; 
   }
   s = s + "\nTemp_Bias_goal:       ";
-  s = s + String(TemperatureBias[1], 1) + ", " + String(TemperatureBias[2], 1) + ", ";
+  s = s + String(TempBias[1], 1) + ", " + String(TempBias[2], 1) + ", " + String(TempBias[3], 1) + ", ";
   s = s + String(Tempgoal) + ", ";
   s = s + "\nValidation:         19772, ";
   s = s + "\n";
@@ -123,8 +124,9 @@ void PrintConfigData (void) {
      Serial.print (BeerNames[i]); Serial.print (",  ");
    }
    Serial.println (); 
-   Serial.print("TemperatureBias:     "); Serial.print(TemperatureBias[1]); Serial.print (",  ");
-   Serial.print(TemperatureBias[2]);Serial.print(",  ");
+   Serial.print("TemperatureBias:     "); Serial.print(TempBias[1]); Serial.print (",  ");
+   Serial.print(TempBias[2]);Serial.print(",  ");
+   Serial.print(TempBias[3]);Serial.print(",  ");
    Serial.print(Tempgoal); Serial.println(",  ");
 }
 /* List files */

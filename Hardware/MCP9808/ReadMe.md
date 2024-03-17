@@ -12,18 +12,24 @@ All Arduino compaitible boards support the I2C bus.  The MCP9808 has 3 address p
 
 The I2C bus is supported by the Arduino Wire library.
 
-## Change from DHT22 to MCP9808
+## MCP9808 vs DHT Sensors
 
-I decided to change from the DHT22 temperature sensor to the MCP9808 to get more accurate temperature readings.  I found that the DHT22 sensors had temperature biases upto 3 degrees and they seem to drift several degrees.    The following figure compares the MCP to the DHT22.
+I decided to add the capability to use either Digital Humidity and Temperature (DHT) or  MCP9808 sensors.  I found that the DHT22 sensors had temperature biases upto 2 degrees and they seem to drift.    The following figure compares the MCP to the DHT22.
 
 ![](Comparison.jpg)
 
 ## Implementation
 
-I ran five wires to each sensor (+3.3V, Gnd, SDA, SCL and A0).  On one sensor A0 was connected to 3.3V and the other sensor is connected to GND.  The addresses of the two sensors are hard wired to 0x18 and 0x19.  The following is a picture of the wired sensors.
+I ran five wires to each sensor (+3.3V, Gnd, SDA, SCL and A0).  On one sensor A0 was connected to 3.3V and the other sensor is connected to GND.  The addresses of the two sensors are hard wired to 0x18 and 0x19.  The following is a picture of the wired sensors.  I found that the ground wire had to be run to 0x18 sensor (sensor #1) to get reliable readings.  In the picture these sensors are generic sensors.  On Adafruit sensors the Alert pin is where the A0 pin is.  For the Adafruit sensors I used a 4 pin connector and ran a single wire to the A0 address line.
 
 ![](SensorWiring.jpg)
 
-The change from DHT22 to MCP9808 freed up two pins in the system.  There were two pins for each DHT22 (power and data) for 4 pins.  With the MCP9808, I only used 2 pins (SDA and SCL).  I am hoping I dont have to keep resetting the MCP9808 sensors like the DHT22 sensors.
-
 Because the IC2 bus runs at a high rate (100 kHz)  the SDA and SCL wires should be kept to about a foot or less.  The other wires can be longer.
+
+## Software
+
+You can use upto 3 sensors (any mix of MCP9808 and DHT sensors). The "constants.h" file is edited to select the number of sensors and the type of sensors used.
+
+The SDA and SCL pins are also defined in the "constants.h" file.  The SCL pin is 13 and the SDA pin is 14, but these can be assigned to almost any GPIO pin.
+
+The MCP9808 sensors are assigned sensor numbers first.  For example if you have 2 MCP9808 sensors and 1 DHT sensor, Sensor #1 and Sensor #2 are the MCP9808 and Sensor #3 is the DHT sensor.

@@ -51,14 +51,14 @@ void ProcessCommand(String s) {
   else if (SubString == "tem") {                                      /* Command Temperature Bias */
     int tmpn = s.charAt(5) - '0';
     Serial.print("tmpn = "); Serial.println(tmpn);
-    if (tmpn < 1 || tmpn > 2) {
-      InputError = "Temp number must be 1 or 2";
+    if (tmpn < 1 || tmpn > 3) {
+      InputError = "Temp number must be 1 - 3";
     }
     else {
       SubString = s.substring(11, s.length());
       Serial.print("Value Substring "); Serial.println(SubString);
-      TemperatureBias[tmpn] = SubString.toFloat();
-      InputResults = "Temp #1 bias: " + String(TemperatureBias[1],1) + " #2 bias: " + String(TemperatureBias[2],1);
+      TempBias[tmpn] = SubString.toFloat();
+      InputResults = "Temp bias: #1 " + String(TempBias[1],1) + " #2 " + String(TempBias[2],1) +  + " #3 " + String(TempBias[3],1);
       Serial.println(InputResults);
     }  
   }

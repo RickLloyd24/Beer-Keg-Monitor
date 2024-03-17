@@ -12,23 +12,12 @@ The following is the schematic for the VGA interface:
 
 ![](VGAInterface.jpg)
 
-<style>
-</style>
+The resistors for the RGB signals should have approximately a  2 to 1 ratio. The 47-ohm resistors are for impedance matching.
 
-The resistors for the RGB signals should have a 2 to 1 ratio. The values
-don't seem to be very important. The resistors in the above schematic were just
-some that I had laying around. I did another project and used all 220-ohm
-resistors because I had a lot of them. I used two resistors in series for the
-"0" signals and one for the "1" signals. Both displays were
-sharp and clear.
-
-The 47-ohm resistors are for impedance matching.
-
-With this configuration you can theoretically get 64 colors. For my project
-I used 16 different colors.
+With this configuration you get 64 colors. 
 
 ## Software
 
 For this project I used the FabGL Graphics Library for ESP32.  This library is great!  I used the same library for my keyboard interface.  The library overview is at the following link  [www.FabGL.com](http://www.fabgl.com/)  and is also available on Github.  I used the default pin numbers as defined in the library.
 
-
+There is a **VGATest** program that displays all 64 colors and can help you test the VGA interface.
