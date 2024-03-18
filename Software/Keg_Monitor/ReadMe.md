@@ -16,7 +16,7 @@ following section describes the display.
 
 # Main Display Overview
 
-![](Media\main.jpg)
+![](main.jpg)
 
 The first line is the Name of your system.  I called mine Rick’s Beer
 Keg Monitor.
@@ -67,7 +67,7 @@ following effect:
 
 ## **Command Menu**
 
-![](media/cmd.jpg)
+![](cmd.jpg)
 
 With this display you type the command to execute.  As you type, the
 letters appear on the bottom of the display in the box.  You can hit
