@@ -20,4 +20,6 @@ With this configuration you get 64 colors.
 
 For this project I used the FabGL Graphics Library for ESP32.  This library is great!  I used the same library for my keyboard interface.  The library overview is at the following link  [www.FabGL.com](http://www.fabgl.com/)  and is also available on Github.  I used the default pin numbers as defined in the library.
 
-There is a **VGATest** program that displays all 64 colors and can help you test the VGA interface.
+There is a **VGATest** program that displays all 64 colors and can help you test the VGA interface.  The following a sample of the test display showing all 64 colors.
+
+![](image1.jpeg)

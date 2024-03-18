@@ -62,7 +62,7 @@ The following is the bill of Materials for the entire system:
 
 The following figure is a high level over of the whole project:
 
-![](media\image1.jpeg)
+![](image1.jpeg)
 
 The beer freezer is in the pool shack which does not have Wi-Fi. To get
 Wi-Fi, I installed an old ESP32 board under the eave and ran a cable
