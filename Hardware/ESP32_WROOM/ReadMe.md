@@ -62,33 +62,4 @@ I use these boards for my 3.3 Volt power and ground distribution.  There are not
 
 ![](FREENOVE_WROOM_Pinout.jpg)
 
-## Pin Utilization for Keg Monitor Project
-
-| GPIO | I/O  | FreeNOVE                            | DEVKit V1                                                            |
-| ---- | ---- | ----------------------------------- | -------------------------------------------------------------------- |
-| 0    |      | Not<br> Recommended                 | outputs PWM<br> signal at boot, must be LOW to enter flashing mode   |
-| 1    |      | Used for<br> development            | debug output<br> at boot, UART 0 Tx                                  |
-| 2    | Out  | Freezer Power<br> Control           | connected to<br> on-board LED, must be left floating or LOW to flash |
-| 3    |      | Used for<br> development            | High at boot,<br> UART 0 Rx                                          |
-| 4    | Out  | VGA Blue0                           |                                                                      |
-| 5    | Out  | VGA Blue1                           |                                                                      |
-| 12   |      | Not<br> Recommended                 | boot fails if<br> pulled high                                        |
-| 13   | Both | Temperature<br> Sensor 1            |                                                                      |
-| 14   | Out  | Temperature<br> Sensor Power        | outputs PWM<br> signal at boot                                       |
-| 15   | Out  | VGA V-Sync                          | outputs PWM<br> signal at boot                                       |
-| 16   | In   | Serial from ESP32                   | UART 2 Rx                                                            |
-| 17   | Out  | Serial to ESP32                     | UART 2 Tx                                                            |
-| 18   | Out  | VGA Green0                          |                                                                      |
-| 19   | Out  | VGA Green1                          |                                                                      |
-| 21   | Out  | VGA Red0                            |                                                                      |
-| 22   | Out  | VGA Red1                            |                                                                      |
-| 23   | Out  | VGA H-Sync                          |                                                                      |
-| 25   | Out  | Scale Clock                         |                                                                      |
-| 26   | Both | Temperature<br> Sensor 2            |                                                                      |
-| 27   | In   | ScaleOut4Pin                        |                                                                      |
-| 32   | In   | Keyboard Data<br> PS2 pin 1         |                                                                      |
-| 33   | Out  | Keyboard<br> Clock PS2 pin 5 USB D+ |                                                                      |
-| 34   | In   | ScaleOut0Pin                        | Input Only                                                           |
-| 35   | In   | ScaleOut1Pin                        | Input Only                                                           |
-| 36   | In   | ScaleOut2Pin                        | VP Input Only                                                        |
-| 39   | In   | ScaleOut3Pin                        | VN Input Only                                                        |
+## 

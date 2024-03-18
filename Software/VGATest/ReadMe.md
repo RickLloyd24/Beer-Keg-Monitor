@@ -8,7 +8,7 @@ sure your hardware is set up optimally.
 
 The following figure is a sample of the Main Display.
 
-![](media\image1.jpeg)
+![](media/image1.jpeg)
 
 The picture is not great because of the video refresh rate. The top
 three rows show the Red, Green, and Blue primary colors. The goal is to
@@ -37,4 +37,4 @@ decide which ones you want to use.
 
 <img src="./media/image3.jpeg" style="width:7in;height:4.35417in" />
 
-![](media\image4.jpeg)
+![](media/image4.jpeg)
