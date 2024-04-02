@@ -11,7 +11,7 @@ addresses), provides an Over the Air (OTA) program update capability and
 provides a Web Serial Interface for debugging. The following figure is a
 sample of what the main web page looks like.
 
-![](C:\Users\rickl\OneDrive\Documents\GitHub\Beer-Keg-Monitor\Software\Wi-FiDisplay\media\image1.jpg)
+![](media\image1.jpg)
 
 The first line is the title of the web page. The second line is the day
 of week, day/month/year date followed by the time of day (local time).

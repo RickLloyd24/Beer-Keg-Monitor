@@ -10,10 +10,12 @@
 #include <DHTSimple.h>            //DHT Sensor Library (Custom Library requires download and Install)
 #include "Constants.h"            //Configuration, Constants and Pin Numbers
 
-#define numscales 5                              /* Number of Scales and taps */
+#define maxscales 5
 #define Gain 128
-boolean const ScalesConnected = true;           // used for debuging
+boolean const ScalesConnected = false;           // used for debuging
+boolean const printSerial = false;
 
+/* constructors */
 fabgl::VGAController VGAController;
 Canvas cv(&VGAController);
 fabgl::PS2Controller     PS2Controller;
@@ -29,21 +31,21 @@ DHTSimple dht3(DHT3Pin, DHTType);
 const String ConfigFN = "/config.txt";                    /* Configuration file name */ 
 
 /* Scale Variables */
-long ScaleReadings[numscales];
-long ScaleValues[numscales];
-long PrevScaleValues[numscales];
+long ScaleReadings[maxscales];
+long ScaleValues[maxscales];
+long PrevScaleValues[maxscales];
 char ScaleDisp; 
 int CalibratingFlag = -1;
 float CalWeight = 0;
 
 /* File Variables */
-float EmptyKW[numscales];                               /* Empty Keg Weight */
-float FullKegWeight[numscales];                         /* Full Keg Weight */
-long FullKeg[numscales];                                /* Full Keg Quanta */
-long EmptyKeg[numscales];                               /* Empty Keg (no keg) Quanta */
-String KeggedDate[numscales];                           /* Date Kegged mm/dd/yy format */
-float Alcohol[numscales];                               /* Percent Alcohol */
-String BeerNames[numscales];                            /* Titles for each Tap */ 
+float EmptyKW[maxscales];                               /* Empty Keg Weight */
+float FullKegWeight[maxscales];                         /* Full Keg Weight */
+long FullKeg[maxscales];                                /* Full Keg Quanta */
+long EmptyKeg[maxscales];                               /* Empty Keg (no keg) Quanta */
+String KeggedDate[maxscales];                           /* Date Kegged mm/dd/yy format */
+float Alcohol[maxscales];                               /* Percent Alcohol */
+String BeerNames[maxscales];                            /* Titles for each Tap */ 
 int DaysKegged[] = {0, 0, 0, 0, 0};                     /* Number of days the beer has been in the keg */
 int Tempgoal = 34;                                      /* Desired Freezer Temperature */
 int MaxTemp;                                            /* Maximum temp that is possible */
@@ -52,14 +54,14 @@ float HighTemp;                                         /* Maximum temperature o
 float LowTemp;                                          /* Lowest temperature observed */
 
 /* Temperature and Freezer Global Variables */
-float Temperature[] = {0, 0, 0, 0};           /* Current Temperature, Sensor #1, Sensor #2, Sensor #3 */
+float Temperature[] = {0, 0, 0, 0};           /* Average Temperature, Sensor #1, Sensor #2, Sensor #3 */
 float TempBias[4];                             /* Delta (#1-#2), Sensor #1 Offset, Sensor #2 Offset, Sensor #3 Offset */
 int numTS = 0;
 int UsingSensor = 1;
 
 unsigned long Tensecond;
-unsigned long OneMinute;
-unsigned long Tensecond2;
+unsigned long OneMinuteTT;
+unsigned long Threesecond;
 
 String DateTime = "";
 boolean TimeSet = false;
@@ -127,6 +129,9 @@ void setup()
     Scale.begin(ScaleClk, ScaleOut, Gain);
     DisplayPrint("Scales Running");
   }  
+  else {
+    DisplayPrint("Scales not Connected");
+  }
 
 /* Get Initial Temperature readings */ 
   int GoodTS = InitTempSensors();
@@ -147,7 +152,7 @@ void setup()
 /* Get stored data from Config File */  
   else {
     listDir(LittleFS, "/", 1);                                                   /* List Files in FS */
-    if (ReadConfigFile()) {                                                      /* Read Configuration data from file */
+    if (ReadConfigData()) {                                                      /* Read Configuration data from file */
       Serial.println("Displaying Configuration Variables");
       PrintConfigData();                                                         /* display data read */
       DisplayPrint("Config Data Good");                                        /* Set Good Status */
@@ -161,10 +166,10 @@ void setup()
   DisplayPrint("Setup Complete");
   delay(10000);
 
-/* Setup Tasks times to reduce CPU load  */
+/* Stagger Tasks times to reduce CPU load  */
   Tensecond = millis() + TENSECONDMILS + 200;
-  Tensecond2 = millis() + TENSECONDMILS + 5300;
-  OneMinute = millis() + MINUTEMILS + 2500;
+  Threesecond = millis() + THREESECONDMILS + 1300;
+  OneMinuteTT = millis() + MINUTEMILS + 2500;
   
   cv.clear();
   DisplayUpdate();
@@ -184,19 +189,28 @@ void loop()  {
     ProcessCommand(s0);
     s0 = "";
   }
-/* Check information received on Serial Port 2 */
-  if (Serial2.available() > 0) {                                                /* Check if anything is in the buffer */
-    static String s2 = "";
-    while (Serial2.available()) {                                               /* Read until buffer empty */ 
-      char c = Serial2.read();                                                  /* Read a byte */
-      s2 = s2 + c;                                                              /* Add char to buffer */
-      if (c == '!') s2 = c;
-      if (c == ',') {
-        ProcessSerial2(s2);
-        s2 = "";
+/* Check if information received on Port 2 */
+  if (Serial2.available() > 6) {                    /* Check if anything is in the buffer */
+    static String s2;
+    String s = Serial2.readString();                 /* Read data in serial port */
+    //s = s + s2;                                      /* Add any left over chars */
+    int x = s.length();
+    if (printSerial) Serial.println("Rcvd " + String(x) + " chars: " + s);       /* Print that something was Received */
+    int start; int last; int i;
+    for (i = 0; i < x; i++){                     /* Search until a command or the end of the string */
+      if (s.charAt(i) == '!') {   
+        start = i;      
+      }
+      if (s.charAt(i) == ';') {                      /* End of command */
+        last = i;                                    /* Save end of cmd ptr */
+        if ((last - start) > 6) {
+          ProcessSerial2(s.substring(start, last));        /* Process the command */
+        }
       }
     }
-  }
+    s2 = s.substring(last+1, i);
+    if (printSerial) Serial.println("Left Over " + String(s2.length()) + s2);
+  }    
   
 /* Check if a key has been pressed */
   auto keyboard = PS2Controller.keyboard();
@@ -210,32 +224,33 @@ void loop()  {
       }
     }
   }      
-
-/* 10 Second Tasks */  
-  if (curtime > Tensecond) {                                                     
-    Tensecond = Tensecond + TENSECONDMILS;
-    if (ScalesConnected) {
-      Scale.getData(ScaleReadings);
-      ProcessScaleValues();
-    }  
-  }  
-    if (curtime > Tensecond2) {                                                     
-      Tensecond2 = Tensecond2 + TENSECONDMILS;
-      GetTemperature();
-      if (CalibratingFlag != 0) {
+/* 3 Second Tasks */
+  if (curtime > Threesecond) {                                                     
+    Threesecond = Threesecond + THREESECONDMILS;
+    if (CalibratingFlag != -1) {
         if (ScalesConnected) {
-          Scale.getData(ScaleReadings);
           ProcessScaleValues();
         }  
       }
     }
+
+
+/* 10 Second Tasks */  
+  if (curtime > Tensecond) {                                                     
+    Tensecond = Tensecond + TENSECONDMILS;
+    GetTemperature();
+    if (ScalesConnected  && CalibratingFlag == -1) {
+      ProcessScaleValues();
+    }  
+  }  
 /* 1 Minute Tasks */  
-  if (curtime > OneMinute) {                                                     
-    OneMinute = OneMinute + MINUTEMILS;
-    SendGlasses();
+  if (curtime > OneMinuteTT) {         
+    OneMinuteTT = OneMinuteTT + MINUTEMILS;
+    SendGlasses(); 
     SendDaysKegged();
     SendAlcohol();
     SendStyle();
+    SendAlarms();
     if (TimeSet) DateTime = DateTimeStr();
     if(DisplayMode == Normal) DisplayUpdate();
     SendTemperature();

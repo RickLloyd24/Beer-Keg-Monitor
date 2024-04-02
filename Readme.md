@@ -1,6 +1,6 @@
 # Beer Keg Monitoring System
 
-Build your own beer keg monitoring system that keeps track of how many
+![](Final.JPG)Build your own beer keg monitoring system that keeps track of how many
 glasses of beer are left in each keg. The entire system costs less than
 \$100 for 5 beer taps.
 
@@ -60,16 +60,26 @@ The following is the bill of Materials for the entire system:
 | 11   | 1   | Relay                     | \$ 2.00  | \$ 2.00  |
 |      |     | Total                     |          | \$ 95.17 |
 
+<style>
+</style>
+
+## Tools Required
+
+- Soldering Iron (Amazon $10, Soldering Iron Kit - 9-in-1 With 5 Tips, Solder Wire)
+
+- Connectors and Crimping Tool (Amazon $30, Kit with 1550PCS Male and Female 2.54mm Terminals)
+
+- Multi Meter (Recommended Harbor Freight $7, 7-Function Digital Multimeter)
+
+- Drill Motor
+
+- Small Pliers, screw drivers
+
 The following figure is a high level over of the whole project:
 
-![](image1.jpeg)
+![](BlockDiagram.jpeg)
 
-The beer freezer is in the pool shack which does not have Wi-Fi. To get
-Wi-Fi, I installed an old ESP32 board under the eave and ran a cable
-between the two processors. They talk to each other on a serial
-interface. If you have Wi-Fi where your beer is stored, you can get rid
-of the ESP32 board and the serial interface. If you don’t want Wi-Fi
-display, you can also get rid of this interface.
+The beer freezer is in the pool shack which does not have Wi-Fi. To get Wi-Fi, I installed an old ESP32 board under the eave and ran a cable between the two processors. They talk to each other on a serial interface. If you have Wi-Fi where your beer is stored, you can get rid of the ESP32 board and the serial interface. If you don’t want Wi-Fi display, you can also get rid of this interface.
 
 ## Theory of Operation
 
@@ -111,7 +121,7 @@ Check out the hardware folders for all the intimate hardware details.
 ## Why a Keezer?
 
 A Keezer is a chest **Freezer** converted to a **Kegerator** which is
-commonly called a Keezer**.**
+commonly called a Keezer.
 
 A Keezer has many advantages:
 
@@ -153,25 +163,3 @@ padded vinyl plank flooring which worked great.
 
 5) Use breakout boards with screw terminals, much easier and more
    reliable than the solder boards.
-
-## Temperature Sensors
-
-I initially started with DHT22 temperature sensors. I found that these
-sensors hung up and would not be responsive. To keep the sensors working
-I ran power to each sensor from a GPIO pin. When the sensor stopped
-working, I turned the power on and off to reset the sensor. This change
-solved the problem. I think the source of the problem may be a power
-surge when the freezer turns on and off. I have used these sensors in
-the past without any problems.
-
-I decided to try MCP9808 sensors. These sensors are more accurate and
-work on the I2C bus. These sensors worked better in my environment. The
-temperature values are more stable and consistent. I modified the
-software to work with both DHT and MCP sensors. My final configuration
-is two MCP sensors and one DHT sensor. I felt that even if the I2C bus
-goes down I would still have one working temperature sensor.
-
-I also installed a little fan in the freezer. I got much more consistent
-temperature readings with the fan moving the air inside the freezer.
-
-You can read about the temperature sensors in hardware folder.

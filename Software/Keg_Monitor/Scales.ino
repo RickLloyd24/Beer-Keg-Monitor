@@ -9,19 +9,21 @@ void ProcessScaleValues(void) {
       if (TimeOutCnt[sn] > 3) {                                                 /* Flag 3 times in row */
         String s = "Scale " + String(sn) + " Tap " + String(sn+1) + " Time Out";
         ProcAlarm(Alarm1, s);
-      }
-    }
+       }
+    }   
     else if (sv == 8388608) {                                                  /* Not Connected Error */
-      String s = "Scale " + String(sn) + " Tap " + String(sn+1) + " Not Connected ";
-      ProcAlarm(Alarm2, s);
-    }
+      TimeOutCnt[sn]++;
+      if (TimeOutCnt[sn] > 3) {                                                 /* Flag 3 times in row */
+        String s = "Scale " + String(sn) + " Tap " + String(sn+1) + " Not Connected ";
+        ProcAlarm(Alarm2, s);
+      }
+    }  
     else {                                                                        /* Good Scale Value */
       PrevScaleValues[sn] = ScaleValues[sn];
       ScaleValues[sn] = sv;
       TimeOutCnt[sn] = 0;
-      //ScaleStatistics(sn);
+      if (CalibratingFlag == sn) Calibrate (sv);                                  /* Calibrating Scale i */
     }  
-    if (CalibratingFlag == sn) Calibrate (sv);                                  /* Calibrating Scale i */
   }
   if (DisplayMode == Scales) DisplayScaleValues();
   CalculateGlasses();
