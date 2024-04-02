@@ -1,19 +1,18 @@
-/* ESP32 board select the Wemos D1 R32 board Minimal SPIFFS for this code */
+/* ESP32 board select the Wemos D1 R32 board Partition Minimal SPIFFS for this code */
 #include <Arduino.h>
-#include <TimeLib.h>
+#include <TimeLib.h>              //Time Library for time of day and NTP access
 #include <WiFi.h>                 //Wi-Fi Library
 #include <ESPmDNS.h>              //Dynamic Name Service Library
 #include <ESP_Mail_Client.h>      //Email and Text Message Libray
-#include <ESPAsyncWebServer.h>
-#include <AsyncElegantOTA.h>
-#include <AsyncTCP.h>
-#include <WebSerialLite.h>
-#include "KegMonitor.h"
-#include "Passwords.h"
+#include <ESPAsyncWebServer.h>    //Asynchronous Web Server library
+#include <AsyncElegantOTA.h>      //Over the Air updates
+#include <AsyncTCP.h>             //Required for Asynchronous Web Server
+#include <WebSerialLite.h>        //Provides a webserial interface for debugging
+#include "KegMonitor.h"           //Web page data
+#include "Passwords.h"            //Passwords and configuration information
 
 /* Debug Variables */
-boolean printSerial = true;                             /* Display Serial 2 data (ESP25) */
-const char* newhostname = "KegMonitor";
+boolean printSerial = false;                             /* Display Serial 2 data (ESP25) */
 
 #define numscales 5                            /* Number of Scales currently connected */
 #define MaxBufferSize 9000                     /* Maximum HTML page size */
@@ -35,7 +34,7 @@ int indx[30];                                           /* Ptrs into buffer to i
 int len = 0;                                            /* size of index_html */
 String blank = "                       ";               /* Blank string */
 int AlarmCnt = 0;
-String AlarmStr = "";
+String AlarmStr[4];
 char tmpbuffer[20];        
 
 /* Loop time Variables */
@@ -52,6 +51,7 @@ boolean AlarmFlag = true;                              /* Set True so no alarms 
 int freezerOn = 0;                                      /* freezer On flag, 0=Off, 1=On */
 const int Mintemp = 30;                                 /* Minimum Freezer Temperature */
 const int Maxtemp = 40;                                 /* Maximum Freezer Temperature */
+int numTS = 0;
 
 /* WiFi Variables */
 String IPaddr = "";                                     /* IP Address */ 
@@ -85,13 +85,11 @@ void setup() {
     while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
-  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);                                   /* Start Serial 2 Port */
+  Serial2.begin(9600);                                   /* Start Serial 2 Port */
   Serial.println("Serial Ports Ready");                                          /* Set Normal Status */
 
   Serial.println();
   Serial.println("ESP32 Setup");
-  Serial.println("Serial Txd is on pin: "+String(TX));
-  Serial.println("Serial Rxd is on pin: "+String(RX));
 
 /* Setup Pin Modes */
    pinMode (LED_BUILTIN, OUTPUT);                                                /* On Board LED */
@@ -134,27 +132,34 @@ void setup() {
 void loop() {
   curtime = millis();
 //  server.handleClient();
-  
+
 /* Check if information received on Port 2 */
-  if (Serial2.available() >> 0) {                    /* Check if anything is in the buffer */
+  if (Serial2.available() > 6) {                    /* Check if anything is in the buffer */
+    static String s2;
     String s = Serial2.readString();                 /* Read data in serial port */
-    if (printSerial) Serialprintln("Rcvd: " + s);       /* Print that something was Received */
-    int x = s.length();                              /* Get the length of the string */
-    int start; int last;                             /* Declare Variables */
-    for (int i = 0; i < x; i++){                     /* Search until a command or the end of the string */
-      if (s.charAt(i) == '&') {                      /* Start of cmd string */
-        start = i;                                   /* save start */
+    //s = s + s2;                                      /* Add any left over chars */
+    int x = s.length();
+    if (printSerial) Serialprintln("Rcvd: " + String(x) + " chars");       /* Print that something was Received */
+    if (printSerial) Serialprintln(s);
+    int start; int last; int i;
+    for (i = 0; i < x; i++){                     /* Search until a command or the end of the string */
+      if (s.charAt(i) == '&') {   
+        start = i;      
       }
-      if (s.charAt(i) == ',') {                      /* End of command */
+      if (s.charAt(i) == ';') {                      /* End of command */
         last = i;                                    /* Save end of cmd ptr */
-        ProcessCmd(s.substring(start, last));        /* Process the command */
+        if ((last - start) > 6) {
+          ProcessCmd(s.substring(start, last));        /* Process the command */
+        }  
       }
-    }    
+    }
+    s2 = s.substring(last+1, i);
+    if (printSerial) Serialprintln("Left Over " + String(s2.length()) + s2);
   }  
   
 /* Check System Time */
   if (curtime > (nTime)) {                                               /* If it is time to update time */
-    nTime = curtime + DAYMILLS;
+    nTime = nTime + DAYMILLS;
     if (WiFiflag) {                                                     /* Is WiFi connected? */
       if (timeStatus() == timeSet) {
         Serialprintln("Time is Synced");
@@ -170,29 +175,26 @@ void loop() {
       }
     }
   } 
-/* Send WiFi and Time status */
-  if (curtime > (tTime)) {                                              /* Is it time to check time */
+/* Send Time status */
+  if (curtime > tTime) {                                                /* Is it time to check time? */
     tTime = tTime + MINUTES1;             
-    ConnectedFlag = (curtime > (DataTime + MINUTES1)) ? false : true;
-    if (ConnectedFlag == false) processAlarms();
-    SendWiFi();
+    ConnectedFlag = (curtime > (DataTime + MINUTES5)) ? false : true;
     if (ValidTime) {                                                     /* Is time of day valid? */
       SendTime();                                                        
     }
   }
 /* Check WiFi connection */  
-  if (curtime > wTime) {                                              /* if it is time to check the Wifi */
-    wTime = wTime + MINUTES5;                                          /* Check Wifi again in 5 minutes */
-    if (WiFi.status() == WL_CONNECTED) {                               /* is WiFi Connected */  
-      RSSIlvl = WiFi.RSSI();                                           /* Get current signal level */
-      IPaddr = WiFi.localIP().toString();                              /* Get the IP Address */
-      WiFiflag = true;                                                 /* Set Wifi is Connected */
-      SendWiFi();                                                      /* Send WiFi Status */
+  if (curtime > wTime) {                                              /* if it is time to check the Wifi? */
+    wTime = wTime + MINUTES5;           
+    if (WiFi.status() == WL_CONNECTED) {
+      RSSIlvl = WiFi.RSSI();            
+      IPaddr = WiFi.localIP().toString();
+      WiFiflag = true;                   
+      SendWiFi();                        
     }  
     else {                                                             /* WiFi is not connected */
       WiFi.disconnect();                                               /* Disconnect Wifi */
       RSSIlvl = 31.0;
-      SendWiFi();
       WiFi.begin(ssid,password);                                       /* Try to reconnect */
       long timeout = millis();                                         /* Set Timeout to current time */
       while (WiFi.status() != WL_CONNECTED) {                          /* Loop until connected */

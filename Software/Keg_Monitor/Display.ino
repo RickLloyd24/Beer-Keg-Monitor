@@ -24,7 +24,10 @@ void DisplayUpdate(void) {
     cRow = cRow + Row;
   }
   setPenColor64(blueLobster);
-  if (numTS == 1) {
+  if (numTS == 0) {
+    cv.drawText(0, Row8, "No Temperature Sensors Installed"); 
+  }
+  else if (numTS == 1) {
     cv.drawText(0, Row8, "Temp "); 
     setPenColor64(alpineWhite);
     cv.drawTextFmt(Col8, Row8, "%4.1f F ", Temperature[1]);
@@ -111,6 +114,12 @@ void DisplayCmdStatus(String s) {
   cv.setPenColor(Color::Green);
   drawTextStr(0, Row11, s);
 }
+void DisplayCalStatus(String s) {
+  ClearRow(Row13);
+  cv.setPenColor(Color::Green);
+  drawTextStr(0, Row13, s);
+}
+
 void DisplayRow14(String s) {
   ClearRow(Row14);
   cv.setPenColor(Color::Yellow);
@@ -131,11 +140,11 @@ void DisplayKeys(String s) {
 void DisplayAlarms (void) {
   //Serial.println("Entered DisplayAlarms Function");
   cv.clear();
- if (AlarmCnt == 0) {
+  if (AlarmCnt == 0) {
     cv.setPenColor(Color::Green);
     cv.drawText(0, Row0, "No Alarms");
- }
- else {
+  }
+  else {
     cv.setPenColor(Color::BrightWhite);
     cv.drawText(0, Row0, "Alarms");
     cv.setPenColor(Color::Red);
@@ -150,8 +159,7 @@ void DisplayAlarms (void) {
         cRow = cRow + Row;
       }
     }
-    Serial2.println("&1Alar ,");                               /* No Alarms */
-    AlarmStr = ""; AlarmCnt = 0; AlarmFlag = 0;
+  AlarmStr = ""; AlarmCnt = 0; AlarmFlag = 0;
   }  
 }
 
@@ -219,12 +227,11 @@ void DisplayPrint(String s) {
 
 void ProcAlarm(int alarmNum, String a) {  
   if (bitRead(AlarmFlag, alarmNum) == 0){                                   /* Alarm not set add */
-    Serial2.println("&" + String(AlarmCnt + 2) + "Alar " + a + ",");
-    Serial.println(a);
+    //Serial.println(a);
     bitSet(AlarmFlag, alarmNum);
     AlarmCnt++;
     if (AlarmCnt < (MaxRows - 2)) {
-      AlarmStr = AlarmStr + a + ";";
+      AlarmStr = AlarmStr + String(alarmNum) + " " + a + ";";
     }
   }  
 }

@@ -39,13 +39,19 @@ void InitWiFi(void) {
 }
 
 
-/* Write to display and serial during boot */
+/* Write serial and Webserial */
 void Serialprintln(String s) {
   WebSerial.println(s);
-  Serial.println(s); 
+  Serial.println(s);
+  delay (10);
+}
+/* Write serial and Webserial */
+void Serialprint(char c) {
+  WebSerial.print(c);
+  Serial.print(c); 
 }
 /* Check if there are any critical alarms */
-void processAlarms(void) {
+void CheckTemp(void) {
   if (AlarmFlag == false) {                                                /* Has alarm message already been sent? */
     if (temperature[0] > Maxtemp) {                                          /* Is Freezer too hot? */
       String s = "Keg Monitor: Temperature is too hot, " + String(temperature[0], 1) + " degrees.";
@@ -119,6 +125,11 @@ String DateTimeStr (int DOW) {
   //Serialprintln(s);
   return s;
 }
+String DateTimeStrPad (int DOW) {
+  //
+  return fstr(DateTimeStr(DOW), 30);
+}
+
 String DayofWeek(int Day) {
   // Day of the week (1-7), Sunday is day 1
   if (Day == 1) return "Sunday";

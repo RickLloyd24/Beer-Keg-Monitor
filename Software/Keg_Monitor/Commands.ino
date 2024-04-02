@@ -1,8 +1,9 @@
 void ProcessCommand(String s) {
+  s.toLowerCase();
   String SubString = s.substring(0, 3);
-  SubString.toLowerCase();
   if (SubString == "tap") {
     int tapn = s.charAt(4) - '0';                                       /* convert char to integer */
+    InputError = "";
     if (tapn < 1 || tapn > numscales) {
       InputError = "Tap Error: range 1 to Number of Taps";
       Serial.println(InputError);

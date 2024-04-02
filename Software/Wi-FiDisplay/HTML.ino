@@ -37,9 +37,11 @@ void BuildPage(void) {
   InsertValue(        fstr(IPaddr, 15), indx[22]);                 /* IP Addr */ 
   InsertValue(                   myVer, indx[23]);                 /* date and time of compile */ 
   InsertValue(         ConnectStatus(), indx[24]);                 /* Connect Status */ 
-  InsertValue(          DateTimeStr(1), indx[25]);                 /* Date and Time */ 
+  InsertValue(       DateTimeStrPad(1), indx[25]);                 /* Date and Time */ 
   InsertValue(       DispTempSensors(), indx[26]);                 /* High and Low Temperature */ 
-  InsertValue(            DispAlarms(), indx[27]);                 /* Display Alarms */ 
+  InsertValue(           DispAlarms(1), indx[27]);                 /* Display Alarms */ 
+  InsertValue(           DispAlarms(2), indx[28]);                 /* Display Alarms */ 
+  InsertValue(           DispAlarms(3), indx[29]);                 /* Display Alarms */ 
   //Serial.println(HTMLpage);
   return;
 }  
@@ -75,7 +77,9 @@ int FindVar (int ptr) {
   else if (v == "MS") {return 24;}                                  /* Connect Status */
   else if (v == "DT") {return 25;}                                  /* Date and Time */
   else if (v == "TS") {return 26;}                                  /* High and Low Temperature */
-  else if (v == "AL") {return 27;}                                  /* Alarm Status */
+  else if (v == "A1") {return 27;}                                   /* Alarm Status */
+  else if (v == "A2") {return 28;}                                   /* Alarm Status */
+  else if (v == "A3") {return 29;}                                   /* Alarm Status */
   else {
     Serial.print("--- Error: Variable not found, Code= ");
     Serial.println(v);
@@ -161,10 +165,11 @@ String AlcoholPercent(int scale) {
 }
 /* Return High and Low Temperature String */
 String DispTempSensors(void) {
-  String s = "Temp Sensor 1: " + String(temperature[1], 1) + "&#xBA;F Sensor 2: " + String(temperature[2], 1) + "&#xBA;F";
-//           1         2         3         4
-//  123456789012345678901234567890123456789012345678
-//  Temp Sensor 1: 34.0xxxxxxF Sensor 2: 34.0xxxxxxF
+  if (numTS == 0) return "No Temp Sensors Installed";
+  String s = "Temp ";
+  for (int i = 1; i <= numTS; i++) {
+    s = s + String(i) + ": " + String(temperature[i], 1) + "&#xBA;F ";
+  }
   return s;
 }
 
@@ -210,14 +215,13 @@ void ReadHTMLPage(void) {
   return;
 }
 /* Display Alarm Status */
-String DispAlarms(void){
+String DispAlarms(int i){
   String s = "class=\"values\" style=\"color:";
-  if (AlarmCnt == 1) {                                                  
-    s = s + "red  \">" + AlarmStr + "</span>";  
+  if (AlarmCnt > 0) {                                                  
+    s = s + "red  \">" + fstr(AlarmStr[i],40) + "</span>";  
   }
   else {
-    s = s + "green\">" + "No Alarms  </span>";                   
+    s = s + "green\">" + fstr("No Alarms",40) + "</span>";                   
   }
-  //Serial.println(s);
   return s;
 }

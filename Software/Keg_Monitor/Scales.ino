@@ -1,6 +1,7 @@
 uint8_t GAIN = 1;               //HX711 GAIN
 void ProcessScaleValues(void) {
   static int TimeOutCnt[numscales]; long sv;
+  Scale.getData(ScaleReadings);                                                 /* Read all the scales */
   for (int sn = 0; sn < numscales; sn++) {
     sv = ScaleReadings[sn];
     if (sv == -1) {                                                              /* Time Out Error */
@@ -11,7 +12,7 @@ void ProcessScaleValues(void) {
       }
     }
     else if (sv == 8388608) {                                                  /* Not Connected Error */
-      String s = "Scale " + String(sn) + " Tap " + String(sn+1) + " Not Connected";
+      String s = "Scale " + String(sn) + " Tap " + String(sn+1) + " Not Connected ";
       ProcAlarm(Alarm2, s);
     }
     else {                                                                        /* Good Scale Value */
@@ -36,7 +37,7 @@ void Calibrate (long sv) {
     CalValue = CalValue + sv;
     Calcount = Calcount + 1;
     String s = "Calibrating ... Percent Complete " + String((float(Calcount)/CalSamples)*100) + "%";
-    DisplayCmdStatus(s);
+    DisplayCalStatus(s);
     Serial.println(s);
   }  
   else {                                                                   /* Samples Complete */

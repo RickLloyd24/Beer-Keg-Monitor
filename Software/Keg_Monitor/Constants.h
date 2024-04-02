@@ -4,13 +4,14 @@
 #define DHTSensors 1          //Number of DHT Sensors
 #define DHTType 2             //DHT11 is 1, All others 2 (DHT21, DHT22, AM2301, AM2302) 
 #define DHTPower 1            //1 = Yes, 0 = No,  Multiple sensors can be on one Power pin
-#define DHT1Power 12          //boot fails if pulled high
+#define DHT1Power 12          //boot fails if pulled high. works on power but not on data line
 #define DHT2Power 0           //Pin must be changed if used
 #define DHT3Power 0           //Pin must be changed if used
 #define DHT1Pin 26
 #define DHT2Pin 0             //Pin must be changed if used
 #define DHT3Pin 0             //Pin must be changed if used 
 
+#define numscales 5                              /* Number of Scales and taps */
 
 /* Pin assignments */
 #define FrigControlPin 2
@@ -41,6 +42,7 @@
 #define MINUTES30 1000*60*30
 #define DAYSECONDS 3600*24
 #define DAYSECONDS 3600*24
+#define THREESECONDMILS 1000*3
 #define TENSECONDMILS 1000*10
 #define MINUTEMILS 1000*60
 #define EpochYear 2023
@@ -67,6 +69,7 @@ int DisplayMode = Normal;
 #define Alarm6 6  //MCP Sensor Read Error
 #define Alarm7 7  //All Temp Sensors Bad
 #define Alarm8 8  //DHT Temp Sensor Read Error
+#define Alarm9 9  //Available
 
 /* Key Definitions */
 #define Esc 27

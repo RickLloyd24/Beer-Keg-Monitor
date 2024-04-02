@@ -43,8 +43,8 @@ const char indx_html[] = R"rawliteral(
 .tg .tg-u2v3{background-color:#ffffff;border-color:#ffffff;color:#3531ff;font-family:Arial, Helvetica, sans-serif !important; font-size:26px;font-weight:bold;text-align:left;vertical-align:top}
 .tg .tg-l1w3{border-color:#ffffff;font-family:Arial, Helvetica, sans-serif !important;font-size:26px;text-align:left; vertical-align:top}
 .tg .tg-zqq7{background-color:#ffffff;border-color:#ffffff;color:#3531ff;font-family:Arial, Helvetica, sans-serif !important; font-size:26px;font-weight:bold;text-align:center;vertical-align:top}
-.tg .tg-dlmr{background-color:#ffffff;border-color:#ffffff;color:#963400;font-family:Arial, Helvetica, sans-serif !important; font-size:26px;font-weight:bold;text-align:left;vertical-align:top}
-.tg .tg-oapn{background-color:#ffffff; color:#D2691E; border-color:#ffffff; font-family:Arial, Helvetica, sans-serif !important;font-size:26px;text-align:center; vertical-align:top}
+.tg .tg-dlmr{background-color:#ffffff;border-color:#ffffff;color:#963400;font-family:Arial, Helvetica, sans-serif !important; font-size:26px;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-oapn{background-color:#ffffff; color:#D2691E; border-color:#ffffff; font-family:Arial, Helvetica, sans-serif !important;font-size:26px;text-align:left; vertical-align:top}
 .tg .tg-red{background-color:#ffffff; color:red; border-color:#ffffff; font-family:Arial, Helvetica, sans-serif !important;font-size:26px;text-align:right; vertical-align:top}
 .tg .tg-green{background-color:#ffffff; color:green; border-color:#ffffff; font-family:Arial, Helvetica, sans-serif !important;font-size:26px;text-align:right; vertical-align:top}
 .tg .tg-yellow{background-color:#ffffff; color:#ffcc00; border-color:#ffffff; font-family:Arial, Helvetica, sans-serif !important;font-size:26px;text-align:right; vertical-align:top}
@@ -53,8 +53,8 @@ const char indx_html[] = R"rawliteral(
 <table class="tg">
 <thead>
   <tr>
-    <th class="tg-l1w3"></th>
-    <th class="tg-u2v3">Glasses</th>
+    <th class="tg-l1w3">Tap</th>
+    <th class="tg-u2v3">Glass</th>
     <th class="tg-u2v3">Days</th>
 	<th class="tg-u2v3">Alc</th>
 	<th class="tg-zqq7">Style</th>
@@ -62,44 +62,45 @@ const char indx_html[] = R"rawliteral(
 </thead>
 <tbody>
   <tr>
-    <td class="tg-dlmr">Tap 1</td>
+    <td class="tg-dlmr">1</td>
     <td %T1                         </td>
     <td %D1                         </td>
 	<td class="tg-percent">%P1  </td>
 	<td class="tg-oapn">%N1                     </td>
   </tr>
   <tr>
-    <td class="tg-dlmr">Tap 2</td>
+    <td class="tg-dlmr">2</td>
     <td %T2                         </td>
 	<td %D2                         </td>
     <td class="tg-percent">%P2  </td>
     <td class="tg-oapn">%N2                     </td>
   </tr>
   <tr>
-    <td class="tg-dlmr">Tap 3</td>
+    <td class="tg-dlmr">3</td>
     <td %T3                         </td>
 	<td %D3                         </td>
 	<td class="tg-percent">%P3  </td>
     <td class="tg-oapn">%N3                     </td>
   </tr>
   <tr>
-    <td class="tg-dlmr">Tap 4</td>
+    <td class="tg-dlmr">4</td>
     <td %T4                         </td>
     <td %D4                         </td>
 	<td class="tg-percent">%P4  </td>
     <td class="tg-oapn">%N4                     </td>
   </tr>
   <tr>
-    <td class="tg-dlmr">Tap 5</td>
+    <td class="tg-dlmr">5</td>
     <td %T5                         </td>
     <td %D5                         </td>
 	<td class="tg-percent">%P5  </td>
     <td class="tg-oapn">%N5                      </td>
   </tr>
 </tbody>
-</table><!-- ------ End of Table ------- --> 
+</table>
+<!-- ------ End of Table ------- --> 
 <!-- General Status -------- -->   
-<h3>%MS                                                                                        </h3>    
+<h3> %MS                                                                                        </h3>    
 <p> 
 	<form method="/get">    
 		<span class="labels">RSSI:</span>
@@ -114,9 +115,10 @@ const char indx_html[] = R"rawliteral(
   <span class="labels"> IP address = </span>
   <span class="values" name="IPaddr">%IP              </span><br>
   <span class="units">Revision: %V1                                            </span> <br>
-  <span class="labels" %AL >                                                                             <br>
+  <span class="labels" %A1 > </span>                                                                                <br>
+  <span class="labels" %A2 > </span>                                                                                <br>
+  <span class="labels" %A3 > </span>                                                                                <br>
 </p>
-<br>
 <p>
 use "/webserial" for debugging <br>
 use "/update" to update new software version <br>

@@ -1,5 +1,5 @@
 /* Read the Configuration File */
-boolean ReadConfigFile() {
+boolean ReadConfigData() {
    File file = LittleFS.open(ConfigFN, "r");
    if(!file){
     Serial.println("No Saved Data!");
@@ -8,25 +8,25 @@ boolean ReadConfigFile() {
    while(file.available()){
      String s = file.readString();
      Serial.println("Config file data "); Serial.println (s);
-     for (int j = 0; j < 5; j++) {
+     for (int j = 0; j < maxscales; j++) {
        EmptyKW[j] = SubString(s).toFloat();
      }
-     for (int j = 0; j < 5; j++) {
+     for (int j = 0; j < maxscales; j++) {
        FullKegWeight[j] = SubString(s).toFloat();
      }
-     for (int j = 0; j < 5; j++) {
+     for (int j = 0; j < maxscales; j++) {
        FullKeg[j] = SubString(s).toInt();
      }
-     for (int j = 0; j < 5; j++) {
+     for (int j = 0; j < maxscales; j++) {
        EmptyKeg[j] = SubString(s).toInt();
      }
-     for (int j = 0; j < 5; j++) {
+     for (int j = 0; j < maxscales; j++) {
        KeggedDate[j] = SubString(s);
      }
-     for (int j = 0; j < 5; j++) {
+     for (int j = 0; j < maxscales; j++) {
        Alcohol[j] = SubString(s).toFloat();
      }
-     for (int j = 0; j < 5; j++) {
+     for (int j = 0; j < maxscales; j++) {
        BeerNames[j] = SubString(s);
      }
      TempBias[1] = SubString(s).toFloat();
@@ -43,31 +43,31 @@ boolean ReadConfigFile() {
 void WriteConfigFile (void) {
   String s ="Empty_Keg_Weight:    ";
   int spaces = 11;
-  for (int j = 0; j < 5; j++) {
+  for (int j = 0; j < maxscales; j++) {
     s = s + FSLRJ(String(EmptyKW[j], 2), spaces) + ",";
   }
   s = s + "\nFull_Keg_Weight:     ";
-  for (int j = 0; j < 5; j++) {
+  for (int j = 0; j < maxscales; j++) {
     s = s + FSLRJ(String(FullKegWeight[j], 1), spaces) + ",";
   }
   s = s + "\nFull_Keg_Raw:        ";
-  for (int j = 0; j < 5; j++) {
+  for (int j = 0; j < maxscales; j++) {
     s = s + FSLRJ(String(FullKeg[j]), spaces) + ",";  
   }
   s = s + "\nEmpty_Keg_Raw:       ";
-  for (int j = 0; j < 5; j++) {
+  for (int j = 0; j < maxscales; j++) {
     s = s + FSLRJ(String(EmptyKeg[j]), spaces) + ",";  
   } 
   s = s + "\nDate_Kegged:         ";
-  for (int j = 0; j < 5; j++) {
+  for (int j = 0; j < maxscales; j++) {
     s = s + FSLRJ(String(KeggedDate[j]), spaces) + ",";  
   }
   s = s + "\nAlcohol:             ";
-  for (int j = 0; j < 5; j++) {
+  for (int j = 0; j < maxscales; j++) {
     s = s + FSLRJ(String(Alcohol[j], 1), spaces) + ",";  
   }
   s = s + "\nTitles:              ";
-  for (int j = 0; j < 5; j++) {
+  for (int j = 0; j < maxscales; j++) {
     s = s + BeerNames[j] + ", "; 
   }
   s = s + "\nTemp_Bias_goal:       ";
@@ -87,40 +87,40 @@ void WriteConfigFile (void) {
 void PrintConfigData (void) {
    Serial.println ("Variable Values:");
    Serial.print ("Empty_Keg_Weight: ");
-   for (int i = 0; i<5; i++) {
+   for (int i = 0; i<numscales; i++) {
      Serial.print ("    "); Serial.print (EmptyKW[i]); Serial.print (",  ");
    }
    Serial.println ();  
 
    Serial.print ("Keg_Weight:       ");
-   for (int i = 0; i<5; i++) {
+   for (int i = 0; i<numscales; i++) {
      Serial.print ("    "); Serial.print (FullKegWeight[i]); Serial.print (",  ");
    }
    Serial.println ();  
 
    Serial.print ("Full_Keg_Raw:        ");
-   for (int i = 0; i<5; i++) {
+   for (int i = 0; i<numscales; i++) {
      Serial.print (FullKeg[i]); Serial.print (",  ");
    }
    Serial.println ();  
 
    Serial.print ("Empty_Keg_Raw:       ");
-   for (int i = 0; i<5; i++) {
+   for (int i = 0; i<numscales; i++) {
      Serial.print (EmptyKeg[i]); Serial.print (",  ");
    }
    Serial.println ();  
    Serial.print ("Date_Kegged:         ");
-   for (int i = 0; i<5; i++) {
+   for (int i = 0; i<numscales; i++) {
      Serial.print (KeggedDate[i]); Serial.print (",  ");
    }
    Serial.println ();  
    Serial.print ("Alcohol:             ");
-   for (int i = 0; i<5; i++) {
+   for (int i = 0; i<numscales; i++) {
      Serial.print (Alcohol[i]); Serial.print (",  ");
    }
    Serial.println ();  
    Serial.print ("Keg_Titles:          ");
-   for (int i = 0; i<5; i++) {
+   for (int i = 0; i<numscales; i++) {
      Serial.print (BeerNames[i]); Serial.print (",  ");
    }
    Serial.println (); 
@@ -198,3 +198,13 @@ String FSLRJ (String v, int len) {
   v = blank.substring(0, len - v.length()) + v;                     /* Pad spaces in front */
   return v;                                                         /* return fixed string */
 }
+/* Read the Configuration File */
+String ReadConfigFile() {
+   File file = LittleFS.open(ConfigFN, "r");
+   if(!file){
+    Serial.println("No Saved Data!");
+   }
+   String s = file.readString();
+   Serial.println("Config file data "); Serial.println (s);
+   return s;
+}   

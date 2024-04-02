@@ -23,23 +23,25 @@ int InitTempSensors(void) {
 
 /* Get Temperature  */ 
 void GetTemperature(void) {
-  ReadTempSensors();
-  for (int i = 1; i<= numTS; i++) {
-    if (Temperature[i] > 0) Temperature[i] = Temperature[i] + TempBias[i];    
-  }
-  String s = "Temp values ";
-  int i;
-  for (i = 1; i < numTS; i++){
-    s = s + String(Temperature[i],2) + ", ";
-  }
-  s = s + String(Temperature[i],2);
-  //Serial.println(s);
-  if (SelectTemperatureSensor()) {
-    Temperature[0] = MovingAverage(Temperature[UsingSensor]);
-    if (Temperature[UsingSensor] > HighTemp) HighTemp = Temperature[UsingSensor];                             /* New High Temperature? */
-    if (Temperature[UsingSensor] < LowTemp)  LowTemp = Temperature[UsingSensor];                               /* New Low Temperature? */
+  if(numTS != 0) {
+    ReadTempSensors();
+    for (int i = 1; i<= numTS; i++) {
+      if (Temperature[i] > 0) Temperature[i] = Temperature[i] + TempBias[i];    
+    }
+    String s = "Temp values ";
+    int i;
+    for (i = 1; i < numTS; i++){
+      s = s + String(Temperature[i],2) + ", ";
+    }
+    s = s + String(Temperature[i],2);
+    //Serial.println(s);
+    if (SelectTemperatureSensor()) {
+      Temperature[0] = MovingAverage(Temperature[UsingSensor]);
+      if (Temperature[UsingSensor] > HighTemp) HighTemp = Temperature[UsingSensor];                             /* New High Temperature? */
+      if (Temperature[UsingSensor] < LowTemp)  LowTemp = Temperature[UsingSensor];                               /* New Low Temperature? */
+    }  
+    CheckFreezer();
   }  
-  CheckFreezer();
 }  
 /* Check if Freezer needs to be turned On or Off */
 void CheckFreezer( void ) {
@@ -103,19 +105,24 @@ void ClearTempStatistics(void) {
       Temperature[0] = 0;
 }
 float ReadMCPSensor(MCP9808 &sensor, int sn) {
-  static int count[] = {0, 0, 0};
+  static int count[] = {0, 0, 0, 0}; static int errcnt[] = {0, 0, 0, 0};
   static float previous[3]; float temp = -1;
 
   if (sensor.getManufacturerID() != 0x0054) {
-    ProcAlarm(Alarm6, "I2C Bus Error #" + String(sn));
-    return -1;
+    errcnt[sn]++;
+    if (errcnt[sn] > 3) {
+      ProcAlarm(Alarm6, "I2C Bus Error #" + String(sn));
+      return -1;
+    }  
   }
   if (sensor.getDeviceID() != 0x04) {
-    ProcAlarm(Alarm6,"Device ID Error, Sensor #" + String(sn));
-    return -2;
+    errcnt[sn]++;
+    if (errcnt[sn] > 3) {
+      ProcAlarm(Alarm6,"Device ID Error, Sensor #" + String(sn));
+      return -2;
+    }  
   }
   temp = CtoF(sensor.getTemperature());
-  sn--;
   if (temp == previous[sn]) {
     count[sn]++;
     if (count[sn] > 2*60*60) {      // 2 hours same temperature
@@ -127,6 +134,7 @@ float ReadMCPSensor(MCP9808 &sensor, int sn) {
     previous[sn] = temp;
     count[sn] = 0; 
   }
+  errcnt[sn] = 0;
   return temp;
 }
 float CtoF(float C) {
@@ -137,28 +145,26 @@ float FtoC(float F) {
 }
 /* Read Temperature from Sensor */
 float ReadDHT(DHTSimple &sensor, int sn) {
-  float t = 0; float h = 0; String err = ""; static boolean ec[] = {false, false, false, false};
+  float t = 0; float h = 0; String err = ""; static int ec[] = {0, 0, 0, 0};
   //Serial.println("Reading Sensor " + String(sn));
   err = sensor.getDataRetry(h, t);
   if (err != "OK") {
-    if (DHTPower) {
-      if (ec[sn]) {
+    ec[sn]++;
+    if (ec[sn] > 3) {
+      if (DHTPower == 0) {
         ProcAlarm(Alarm8, "DHT #" + String(sn) + " Read Err, " + err); return -1;
       }  
       else {  
         ResetDHT(sn - MCPSensors);
+        ProcAlarm(Alarm9, "Reset DHT #" + String(sn) + " Read Err, " + err); return -2;
         Serial.println("Error " + err + " Temperature " + String(t));
         Serial.println("Reset Sensor " + String(sn));
-        ec[sn] = true;
         return Temperature[0];
       }
     }
-    else {
-      ProcAlarm(Alarm8, "DHT #" + String(sn) + " Read Err, " + err); return -1;
-    }
   }
   t = CtoF(t);  
-  ec[sn] = false;
+  ec[sn] = 0;
   return t;  
 }
 void ReadTempSensors(void) {
