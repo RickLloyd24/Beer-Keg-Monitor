@@ -10,19 +10,19 @@ glasses of beer are left in each keg. The entire system costs less than
 
 - Controls Beer freezer temperature
 
-- Provides email and text message notifications.
-
-- Provides local and remote displays via Wi-Fi.
-  
-  - Accessible anywhere in the world with Port Forwarding
-
 - Monitors up to 8 beer taps.
 
 - Temperature Stability +/- 0.75 degrees F
 
-- Works with all DHT and/or MCP9808 Temperature Sensors
-  
-  - Up to 3 temperature sensors can be used.
+- Works with all DHT,  MCP9808 and/or DS18B20 Temperature Sensors
+
+- - Up to 3 temperature sensors can be used.
+
+- #NEW# Gets Time of day via WiFi and Network Time Protocol
+
+- #NEW# Added CO2 Saver Support (See CO2 Saver Project)
+
+- #NEW# Provides Redundant Power Supply Support
 
 ## Introduction
 
@@ -77,9 +77,9 @@ The following is the bill of Materials for the entire system:
 
 The following figure is a high level over of the whole project:
 
-![](BlockDiagram.jpeg)
+![](Block%20Diagram.jpg)
 
-The beer freezer is in the pool shack which does not have Wi-Fi. To get Wi-Fi, I installed an old ESP32 board under the eave and ran a cable between the two processors. They talk to each other on a serial interface. If you have Wi-Fi where your beer is stored, you can get rid of the ESP32 board and the serial interface. If you don’t want Wi-Fi display, you can also get rid of this interface.
+The data is displayed on the VGA monitor and input is via the keyboard.  A Solid State Relay (SSR) is used to control the freezer.  I replaced a standard relay with a SSR.  This relay is much more reliable and supports higher currents.  Upto  3 different temperature sensors can be used.  The time of day is received via Wi-Fi from an NTP Server.  A scale power relay is used to reduce false scale readings (discussed later).
 
 ## Theory of Operation
 
@@ -110,9 +110,7 @@ Glasses = (Current Ounces – Empty Keg Weight) / 12 Ounces per glass
 
 ## Software
 
-The software is described in the software folder. There are two
-subfolders for the software, one for the main Keg Monitor and the other
-for the Wi-Fi display.
+The software is in the software folder. 
 
 ## Hardware
 
@@ -163,3 +161,13 @@ padded vinyl plank flooring which worked great.
 
 5) Use breakout boards with screw terminals, much easier and more
    reliable than the solder boards.
+
+## HX711 Scale Sensor
+
+I had a lot of trouble with the HX711 ADC sensor changing state. Periodically The scale reading would change to a completely different number and stay in this state. The readings were still very consistent in this false state. Powering the system On/Off would restore the HX711 ADC to the correct state.
+
+I was able to determine the cause of this problem was power transients. I confirmed this by powering the scales from a battery for several days and no transients occurred.
+
+To fix this problem a scale power relay was added. Every time the freezer is turned On/Off or the CO2 solenoid is turned On/Off the scales are powered off before the event. After the event the scales are powered back on. This finally solved the problem.
+
+The other advantage of this solution is, if another source caused the power transient, the scales will eventually be turned Off/On and read the correct value.

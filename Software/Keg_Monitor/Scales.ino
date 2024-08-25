@@ -1,9 +1,11 @@
 uint8_t GAIN = 1;               //HX711 GAIN
 void ProcessScaleValues(void) {
   static int TimeOutCnt[numscales]; long sv;
+  if (ScaleOnFlag == false) return;
   Scale.getData(ScaleReadings);                                                 /* Read all the scales */
   for (int sn = 0; sn < numscales; sn++) {
     sv = ScaleReadings[sn];
+    //Serial.print(String(sv) + ", ");
     if (sv == -1) {                                                              /* Time Out Error */
       TimeOutCnt[sn]++;
       if (TimeOutCnt[sn] > 3) {                                                 /* Flag 3 times in row */
@@ -17,50 +19,17 @@ void ProcessScaleValues(void) {
         String s = "Scale " + String(sn) + " Tap " + String(sn+1) + " Not Connected ";
         ProcAlarm(Alarm2, s);
       }
-    }  
+    }
     else {                                                                        /* Good Scale Value */
       PrevScaleValues[sn] = ScaleValues[sn];
       ScaleValues[sn] = sv;
       TimeOutCnt[sn] = 0;
-      if (CalibratingFlag == sn) Calibrate (sv);                                  /* Calibrating Scale i */
     }  
   }
   if (DisplayMode == Scales) DisplayScaleValues();
   CalculateGlasses();
 }  
 
-void Calibrate (long sv) {
-  static int Calcount = 0;
-  static long CalValue = 0;
-  const int CalSamples = 8;
-  
-  if(sv < 0) return;                                                                 /* Scale Time Out so wait for next sample */
-  if (Calcount < CalSamples) {                                             /* Gathering Cal Samples */
-    CalValue = CalValue + sv;
-    Calcount = Calcount + 1;
-    String s = "Calibrating ... Percent Complete " + String((float(Calcount)/CalSamples)*100) + "%";
-    DisplayCalStatus(s);
-    Serial.println(s);
-  }  
-  else {                                                                   /* Samples Complete */
-    CalValue = CalValue/CalSamples;
-    if (CalWeight == 0) {
-      EmptyKeg[CalibratingFlag] = CalValue;
-      Serial.print("Cal Complete Empty Keg Value "); Serial.println(EmptyKeg[CalibratingFlag]);
-    }  
-    else {
-      FullKeg[CalibratingFlag] = CalValue;
-      FullKegWeight[CalibratingFlag] = CalWeight;
-      Serial.print("Cal Complete Full Keg "); Serial.println(FullKeg[CalibratingFlag]);
-    } 
-    String s = "Cal Complete. Tap " + String(CalibratingFlag + 1) + " Weight " + String(CalWeight, 1);
-    Serial.println(s);
-    DisplayCmdStatus(s);
-    Calcount = 0; CalValue = 0;
-    CalibratingFlag = -1;
-  }
-  return;
-}
 void CalculateGlasses() {
   for (int i = 0; i < numscales; i++){  
     float ReadingperOunce = abs(FullKeg[i] - EmptyKeg[i])/(FullKegWeight[i]*16);  /* Calculate Reading per Ounce */
@@ -115,7 +84,7 @@ int calculateDayOfYear(int day, int month, int year) {
   
 /* Calculate days kegged for all kegs */
 void CalcDaysKegged(String date){
-  //if (ValidTime == false) return;                                          /* if ntp time is not available return */
+  if (TimeSet == false) return;                                          /* if ntp time is not available return */
   //String s = ntp.formattedTime("%m/%d/%y");                              /* Get current date string */
   long myTime = GetDOY(date);                                              /* Get Current Time */
   for (int i = 0; i < numscales; i++) {                                    /* Loop through all Taps */ 
@@ -152,4 +121,43 @@ String ParseDate (String date) {
   }
   //Serial.print("Date String is "); Serial.println(date);
   return date;
+}
+
+void InitializeScales( void ) {
+    int errorflag = 0;
+    Scale.begin(ScaleClk, ScaleOut, Gain);
+    DisplayPrint("Checking Scales . . . ");
+    delay(500);                                                                   //HX711 Settling Time
+    Scale.getData(PrevScaleValues);                                                 /* Read all the scales */
+    delay(500);
+    Scale.getData(ScaleReadings);                                                 /* Read all the scales */
+    for (int i = 0; i < 20; i++) {
+      errorflag = 0;
+      for (int sn = 0; sn < numscales; sn++) {
+        if (abs(PrevScaleValues[sn] - ScaleReadings[sn]) > 1000) bitSet(errorflag, sn);
+        PrevScaleValues[sn] = ScaleReadings[sn];
+      }
+      if (errorflag == 0) break;
+      delay(500);
+      Scale.getData(ScaleReadings);
+    }  
+    if (errorflag == 0) {
+      DisplayPrint("Scales are all good");
+    }
+    else {
+      String s = "";
+      for (int sn = 0; sn < numscales; sn++) {
+        if (bitRead(errorflag, sn) != 0) s = "Scale " + String(sn) + " is bad";
+      }
+      DisplayPrint(s);
+    }
+}
+void PowerDownScales (void) {
+  digitalWrite(ScalePowerPin, LOW);
+  ScaleOnFlag = false;
+  delay (11);                                               //Wait for scales to go off
+}
+
+void PowerUpScales (void) {
+  ScaleOnTime = curtime + 1000;                            //Wait 1 Second before turning On
 }

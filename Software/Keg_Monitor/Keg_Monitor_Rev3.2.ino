@@ -1,5 +1,7 @@
-/* Use ESP32 WROOM Dev Module* Huge APP, Arduino Core 1, Events Core 0 */
+/* Use ESP32 WROOM Dev Module* Huge APP, Arduino Core 1, Events Core 0 
+   Set Serial Monitor to 9600 Baud */
 #include <Arduino.h>
+#include <WiFi.h>                 //Wi-Fi Library
 #include <TimeLib.h>              //Time Library
 #include <Wire.h>                 //Library for I2C Interface
 #include "mcp9808.h"              //MCP9808 Library 
@@ -8,12 +10,13 @@
 #include "LittleFS.h"             //Little File System Library  
 #include <HX711_Single_Clk.h>     //HX711 Library (Custom Library requires download and Install)   
 #include <DHTSimple.h>            //DHT Sensor Library (Custom Library requires download and Install)
+#include <OneWire.h>              //Arduino Library for One Wire devices
+#include <DallasTemperature.h>    //DS18B20 device library "Arduino-Temperature-Control-Library"
 #include "Constants.h"            //Configuration, Constants and Pin Numbers
 
-#define maxscales 5
-#define Gain 128
-boolean const ScalesConnected = true;           // used for debuging
+boolean ScalesConnected = true;                 // used for debuging
 boolean const printSerial = false;
+int ptr = 0;
 
 /* constructors */
 fabgl::VGAController VGAController;
@@ -26,16 +29,12 @@ MCP9808 Sensor3(0x1A);
 DHTSimple dht1(DHT1Pin, DHTType);
 DHTSimple dht2(DHT2Pin, DHTType);
 DHTSimple dht3(DHT3Pin, DHTType);
+OneWire oneWire(ONE_WIRE_BUS);                               // Setup a oneWire instance to communicate with any OneWire devices
+DallasTemperature sensors(&oneWire);                         // Pass our oneWire reference to Dallas Temperature
+DeviceAddress DS18B20Temp1, DS18B20Temp2, DS18B20Temp3;      // arrays to hold device addresses
 
 /* Filenames */
 const String ConfigFN = "/config.txt";                    /* Configuration file name */ 
-
-/* Scale Variables */
-long ScaleReadings[maxscales];
-long ScaleValues[maxscales];
-long PrevScaleValues[maxscales];
-char ScaleDisp; 
-float CalWeight = 0;
 
 /* File Variables */
 float EmptyKW[maxscales];                               /* Empty Keg Weight */
@@ -61,11 +60,24 @@ int UsingSensor = 1;
 unsigned long Tensecond;
 unsigned long OneMinuteTT;
 unsigned long Threesecond;
+unsigned long curtime = 0;                             /* Current running time in millis */
 
-String DateTime = "";
-boolean TimeSet = false;
+/* CO2 Variables */
+#define CO2BufLen 290             //Number of samples to Plot
+long CO2Pressure = 0;             //current pressure psi
+long CO2Rate = 60;                //On Rate in minutes
+unsigned long CO2OnTime = 30000;  //CO2 Next On Time
+unsigned long CO2Reset = 0;       //Reset Rate back to 60 minutes
+int MaxPressReading = 0;          //CO2 Maximum Pressure Reading
+int MinPressReading = 0;          //CO2 Minimum Pressure Reading
+int CO2BufPtr = 0; 
+int CO2PressureBuf[CO2BufLen];
+int CO2PressureChg = 0;
+float offset = 0; float prevOffset = 0;
+float slope = 0;  float prevSlope = 0;
+
 int CurrentTap = 1;
-float GlassesLeft[] = {30.0, 30.0, 30.0, 30.0, 30.0};
+float GlassesLeft[] = {5.0, 10.0, 15.0, 20.0, 30.0};
 boolean TempAvailFlag = true;
 boolean FreezerState = false;
 int FreezerOnPercent = 0;
@@ -76,33 +88,41 @@ int AlarmCnt = 0;
 long AlarmFlag = 0;
 int ScaleClk = ScaleClkPin;
 int ScaleOut[] = {ScaleOut0Pin, ScaleOut1Pin, ScaleOut2Pin, ScaleOut3Pin, ScaleOut4Pin};
+String DisplayUpdateStr = "";
 
 /* ---------------------------  Setup --------------------------------------------- */
 void setup()
 {
 /* Setup VGA */  
   PS2Controller.begin(PS2Preset::KeyboardPort0);
-  //VGAController.begin(red1Pin, red0Pin, green1Pin, green0Pin, blue1Pin, blue0Pin, HSyncPin, VSyncPin);   
-  //VGAController.begin(GPIO_NUM_14, GPIO_NUM_13, GPIO_NUM_19, GPIO_NUM_18, GPIO_NUM_5, GPIO_NUM_4, GPIO_NUM_23, GPIO_NUM_15);
+  //VGAController.begin(GPIO_NUM_22, GPIO_NUM_19, GPIO_NUM_5, GPIO_NUM_23, GPIO_NUM_15);
+  // Use GPIO 22-21 for red, GPIO 19-18 for green, GPIO 5-4 for blue, GPIO 23 for HSync and GPIO 15 for VSync
+  //VGAController.begin(GPIO_NUM_22, GPIO_NUM_21, GPIO_NUM_19, GPIO_NUM_18, GPIO_NUM_5, GPIO_NUM_4, GPIO_NUM_23, GPIO_NUM_15);
   VGAController.begin();
   VGAController.setResolution(QVGA_320x240_60Hz);
   delay(500);
   cv.setPenColor(Color::Yellow);
   cv.setBrushColor(Color::Black);
   cv.selectFont(&fabgl::FONT_8x16);
-  
-/* Setup Serial Ports */
+
   Serial.begin(115200);
   delay(500);  // avoid garbage into the UART
-  Serial.write("\r\n\nReset\r\n");
-  Serial.println();
-  Serial2.begin(9600);
-  
-  delay(1000);
+
   const char myVer[] = __DATE__ " @ " __TIME__;
   DisplayPrint("Build: " + String(myVer));
   DisplayPrint("VGA Setup Complete");
-  DisplayPrint("Serial Ports Ready");
+
+  pinMode(CO2ValvePin, OUTPUT);
+  digitalWrite(CO2ValvePin, LOW);
+  if (CO2OnlyFlag) CO2OnlyLoop();
+
+/* Intialize WiFi */
+ if (InitWiFi()) {
+    DisplayPrint("Connected to WiFi! " + String(RSSIlvl,1) + " dBm");
+  }  
+  else {
+    DisplayPrint("Failed to Connected to WiFi!");
+  }
 
 /* Setup Pin Modes */
   pinMode(PrimaryOnOffPin, OUTPUT);
@@ -111,15 +131,25 @@ void setup()
   digitalWrite(PrimarySecondaryPin, Primary);
   digitalWrite(PrimaryOnOffPin, LOW);
   digitalWrite(SecondaryOnOffPin, LOW);
+  pinMode(ScalePowerPin, OUTPUT);
+  digitalWrite(ScalePowerPin, HIGH);
+  ScaleOnFlag = true;
   DisplayPrint("Hardware Pins Set");
 
-/* Intialize and Start Scales */
-  if (ScalesConnected) {
-    InitializeScales();
-  }  
-  else {
-    DisplayPrint("Scales not Connected");
+/* Set Time from NTP Service */
+  DisplayPrint("Getting Current Time");
+  delay(1000);
+  if (!SetRTCTime()) {
+    DisplayPrint("Failed to obtain Time");
+    DateTime = "No Time Available";
+    MidNightReset = DAYSECONDS;
   }
+  else {
+    TimeSet = true;
+    DateTime = DateTimeStr();
+    DisplayPrint("Current Time is " + DateTime);
+    MidNightReset = (DAYSECONDS - (hour()*3600 + minute()*60) + second()) * 1000 - millis();
+  }  
 
 /* Get Initial Temperature readings */ 
   int GoodTS = InitTempSensors();
@@ -151,54 +181,32 @@ void setup()
       while(1);
     }
   }
+  /* Intialize and Start Scales */
+  if (ScalesConnected) {
+    InitializeScales();
+  }  
+  else {
+    DisplayPrint("Scales not Connected");
+  }
+
   DisplayPrint("Setup Complete");
   delay(5000);
 
-/* Stagger Tasks times to reduce CPU load  */
-  Tensecond = millis() + TENSECONDMILS + 200;
-  OneMinuteTT = millis() + MINUTEMILS + 2500;
-  
   cv.clear();
+  ClearDisplayUpdateStr();
   DisplayUpdate();
 
+/* Stagger Tasks times to reduce CPU load  */
+  curtime = millis();
+  Tensecond = curtime + TENSECONDMILS + 200;
+  OneMinuteTT = curtime + MINUTEMILS + 2500;
+  CO2OnTime = curtime + TENSECONDMILS*3 + 600;
+  ScreenSaverStartTime = curtime + ScreenSaverStart;
 }
 /* ---------------------------  Main Loop  --------------------------------------------- */
-unsigned long curtime = 0;                             /* Curerent running time in millis */
-
 void loop()  {
   curtime = millis();
 
-/* Serial 0 Interface for debugging */
-  if (Serial.available() > 0) {                                          /* Is something in the serial buffer? */
-    static String s0 = "";
-    s0 = Serial.readString();               
-    Serial.print("Input String: "); Serial.print(s0);
-    ProcessCommand(s0);
-    s0 = "";
-  }
-/* Check if information received on Port 2 */
-  if (Serial2.available() > 6) {                    /* Check if anything is in the buffer */
-    static String s2;
-    String s = Serial2.readString();                 /* Read data in serial port */
-    //s = s + s2;                                      /* Add any left over chars */
-    int x = s.length();
-    if (printSerial) Serial.println("Rcvd " + String(x) + " chars: " + s);       /* Print that something was Received */
-    int start; int last; int i;
-    for (i = 0; i < x; i++){                     /* Search until a command or the end of the string */
-      if (s.charAt(i) == '!') {   
-        start = i;      
-      }
-      if (s.charAt(i) == ';') {                      /* End of command */
-        last = i;                                    /* Save end of cmd ptr */
-        if ((last - start) > 6) {
-          ProcessSerial2(s.substring(start, last));        /* Process the command */
-        }
-      }
-    }
-    s2 = s.substring(last+1, i);
-    if (printSerial) Serial.println("Left Over " + String(s2.length()) + s2);
-  }    
-  
 /* Check if a key has been pressed */
   auto keyboard = PS2Controller.keyboard();
   if (keyboard->virtualKeyAvailable()) {
@@ -216,21 +224,39 @@ void loop()  {
   if (curtime > Tensecond) {                                                     
     Tensecond = Tensecond + TENSECONDMILS;
     GetTemperature();
-    if (ScalesConnected) {
-      ProcessScaleValues();
-    }  
+    if (ScalesConnected) ProcessScaleValues();
+    ReadCO2Pressure();
   }  
 /* 1 Minute Tasks */  
   if (curtime > OneMinuteTT) {         
     OneMinuteTT = OneMinuteTT + MINUTEMILS;
-    SendGlasses(); 
-    SendDaysKegged();
-    SendAlcohol();
-    SendStyle();
-    SendAlarms();
+    if (curtime > ScreenSaverStartTime) {
+      if (ScreenSaverOn == false) {
+        cv.clear();
+        ScreenSaverOn = true;
+        Serial.println("Screen Saver is On");
+      }  
+    }
     if (TimeSet) DateTime = DateTimeStr();
+    CalcDaysKegged(DateTime);
     if(DisplayMode == Normal) DisplayUpdate();
-    SendTemperature();
-    if(millis() > MidNightReset) ESP.restart();
+    if(curtime > MidNightReset) ESP.restart();
+  }
+/* CO2 Control Tasks */  
+  if (curtime > CO2OnTime) {         
+    CheckCO2();
+  }
+/* Check if Scale is Ready */  
+  if (ScaleOnFlag == false) {
+    if (curtime > ScaleOnTime) {
+      if (digitalRead(ScalePowerPin) == HIGH) {
+        ScaleOnFlag = true;  
+      }
+      else {
+        digitalWrite(ScalePowerPin, HIGH);
+        ScaleOnTime = curtime + 1000;                            //Scale not ready for 450 ms to set flag to true
+      }
+      
+    }
   }
 }

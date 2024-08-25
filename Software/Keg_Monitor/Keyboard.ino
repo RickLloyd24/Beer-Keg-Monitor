@@ -8,14 +8,21 @@ void ProcessKey(char key) {
   else if (DisplayMode == Command) {
     ProcessKeyCommand(key);
   }
+  else if (DisplayMode == Plot) {
+    ProcessKeyCO2Plot(key);
+  }
   else if (DisplayMode == Alarm) {
     if (key == Esc) {
+      ClearDisplayUpdateStr();
       DisplayUpdate();
       DisplayMode = Normal;
     }
   }
   else if (DisplayMode == Normal) {
     //Serial.print("key Pressed "); Serial.println(key, DEC);
+    if (ScreenSaverOn == true) ClearDisplayUpdateStr();
+    ScreenSaverOn = false;
+    ScreenSaverStartTime = curtime + ScreenSaverStart;
     int tapn = key - '0';
     if (key == Esc) {
       DisplayMode = Command;
@@ -40,7 +47,11 @@ void ProcessKey(char key) {
       DisplayScaleCommands();
       DisplayMode = Scales;
     }  
-  }  
+    else if (key == 'p') {
+      DisplayMode = Plot;
+      DisplayPlot();
+    }  
+  }
 }
      
 void ProcessKeyCommand(char key) {
@@ -61,6 +72,7 @@ void ProcessKeyCommand(char key) {
       DisplayKeys(s);
   }
   else if (key == Esc) {                                        /* Exit Command Mode */
+      ClearDisplayUpdateStr();
       DisplayUpdate();
       InputError = "";
       DisplayMode = Normal;
@@ -83,7 +95,51 @@ void ProcessKeyScales(int key) {
         DisplayScaleCommands();
       case Esc :
         DisplayMode = Normal;
+        ClearDisplayUpdateStr();
         DisplayUpdate();
         break;
     }
-}          
+}
+
+void ProcessKeyCO2Plot (int key) {
+  static String keystr = "";
+  Serial.println("CO2 Plot Key " + String(key));
+  if (key == Esc) {
+    if (CO2OnlyFlag == false) {
+      ClearDisplayUpdateStr();
+      DisplayUpdate();
+      DisplayMode = Normal;
+    }
+    else {
+      DisplayPlot();  
+    }
+  }
+  else if (key >= '0' && key <= '9') {
+    keystr = keystr + String(key - '0');
+  }
+  else if (key == CarriageReturn) {
+    int newrate = keystr.toInt();
+    if (newrate >=0 && newrate <=99) {
+      CO2Rate = newrate;
+      CO2OnTime = millis();
+      Serial.println("New rate is " + String(CO2Rate));
+      drawText(Col4, Row13, fluorRed, "Rate is " + String(CO2Rate) + "     ");
+    }
+    else {
+      Serial.println("Input Error key string " + keystr);
+    }
+    keystr = "";
+  }
+  else if (key == 'u') {
+    ScreenSaverOn = false;
+    ScreenSaverStartTime = curtime + ScreenSaverStart;
+    Serial.println("u key pressed");
+    DisplayPlot();
+    delay(1000);
+  }
+  else if (key == 'a') {
+    DisplayAlarms();
+  }
+
+  
+}

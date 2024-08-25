@@ -162,7 +162,6 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
 }
 /* Find the Sub String */
 String SubString (String s) {
-  static int ptr = 0;
   
    int start = 0; int last = 0; int i; boolean flag = true;
    //Serial.print("ptr ");Serial.print(ptr); Serial.print(" s.length "); Serial.println(s.length());
